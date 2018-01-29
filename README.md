@@ -104,11 +104,11 @@ What we noticed that we need a more data to train our CNN models to have a good 
 
 A jupyter notbook was created to test the model accuracy and here are the some outputs. Please refer to the notebook, ~/classifier/faster-R-CNN/object_detection.ipynb, for more details.
 
-![Green]("/output_images/GREEN.png")
+![Green](/output_images/GREEN.png)
 
-![Yellow]("/output_images/YELLOW.png")
+![Yellow](/output_images/YELLOW.png)
 
-![Red]("/output_images/RED.png")
+![Red](/output_images/RED.png)
 
 
 
