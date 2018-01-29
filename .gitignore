@@ -2,7 +2,8 @@
 build
 devel
 imgs/**
-data/**
+classifier/faster-R-CNN/checkpoints/frozen_inference_graph.pb
+traffic_light_bag_files/**
 traffic_light_detection/**
 profile.tmp
 *.zim

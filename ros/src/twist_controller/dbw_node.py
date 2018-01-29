@@ -3,7 +3,8 @@
 import rospy
 from std_msgs.msg import Bool
 from dbw_mkz_msgs.msg import ThrottleCmd, SteeringCmd, BrakeCmd, SteeringReport
-from geometry_msgs.msg import TwistStamped
+from geometry_msgs.msg import TwistStamped, PoseStamped
+from styx_msgs.msg import Lane
 import math
 
 from twist_controller import Controller
@@ -45,11 +46,13 @@ class DBWNode(object):
         self.steer_ratio = rospy.get_param('~steer_ratio', 14.8)
         self.max_lat_accel = rospy.get_param('~max_lat_accel', 3.)
         self.max_steer_angle = rospy.get_param('~max_steer_angle', 8.)
+        self.simulation = rospy.get_param('~simulation', False)
 
         ## Initialize all velocities
         self.linear_velocity = 0
         self.angular_velocity = 0
         self.current_velocity = 0
+        self.current_angular_velocity = 0
         self.dbw_is_on = False
 
         # Asynchronous publish with queue size of 1
@@ -62,7 +65,7 @@ class DBWNode(object):
         #                              self.decel_limit, self.accel_limit, self.wheel_radius,
         #                              self.wheel_base, self.steer_ratio, self.max_lat_accel,self.max_steer_angle)
 
-        self.controller = Controller()
+        self.controller = Controller(self.simulation)   # To check whether it is simulation or on actual site 
 
         # TODO: Subscribe to all the topics you need to
 
@@ -72,8 +75,9 @@ class DBWNode(object):
         # Subscribe to the /vehicle/dbw_enabled topic --> get self.dwb_is_on from here
         rospy.Subscriber('/vehicle/dbw_enabled', Bool, self.dbw_enabled_cb)
 
-        # Subscribe to the /current_velocity topic --> get current_velocity from here
+        # Subscribe to the /current_velocity topic --> get current_velocity  and current_angular_velocity from here
         rospy.Subscriber('/current_velocity', TwistStamped, self.current_velocity_cb)
+
 
         self.loop()
 
@@ -89,7 +93,7 @@ class DBWNode(object):
         # Yaw is in the Z axis --> Ignore Roll and Pitch
         self.angular_velocity = msg.twist.angular.z
 
-        rospy.logwarn("Linear Velocity: %.2f, Angular Velocity: %2f", self.linear_velocity, self.angular_velocity)
+        #rospy.logwarn("Linear Velocity: %.2f, Angular Velocity: %2f", self.linear_velocity, self.angular_velocity)
 
     def current_velocity_cb(self, msg):
         """
@@ -97,17 +101,22 @@ class DBWNode(object):
         :param msg: TwistStamped message based on rosmsg info
         :return: Side effect is that self.current_velocity gets updated
         """
+        # Get the current linear velocity
         self.current_velocity = msg.twist.linear.x
 
-        rospy.logwarn("Current Velocity: %2f", self.current_velocity)
+        # Get the current angular velocity
+        self.current_angular_velocity = msg.twist.angular.z
+        #rospy.logwarn("Current Velocity: %2f", self.current_velocity)
 
 
     def dbw_enabled_cb(self, msg):
-        self.dbw_is_on = msg.data
+        """
+        Callback to check if the Drive by wire is enabled or not
+        """
+        self.dbw_is_on = bool(msg.data)
 
 
     def loop(self):
-        #rate = rospy.Rate(50)
 
         # Reducing the rate to try and get the simulator working
         rate = rospy.Rate(50)
@@ -121,7 +130,7 @@ class DBWNode(object):
             throttle, brake, steer = self.controller.control(self.linear_velocity, self.angular_velocity,
                                                                 self.current_velocity, deltaT, self.dbw_is_on)
 
-            rospy.logwarn("throttle:%.2f, brake:%.2f, steer:%.2f", throttle, brake, steer)
+            #rospy.logwarn("throttle:%.2f, brake:%.2f, steer:%.2f", throttle, brake, steer)
 
             if self.dbw_is_on:
                 self.publish(throttle, brake, steer)

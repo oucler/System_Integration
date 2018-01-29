@@ -53,7 +53,9 @@ class WaypointUpdater(object):
         self.orientation = None
         self.theta = None
         self.waypoints = None
-        self.updateRate = 2  # Update rate in second
+
+        self.updateRate = 5  # Update rate in second
+
         self.currentWaypoints = None
         self.final_waypoints = []
         self.cruz_control = None
@@ -66,6 +68,7 @@ class WaypointUpdater(object):
         self.tlWaypoints = None
         self.decelpoly = None
         self.restricted_speed_in_mps = 0 #Miles/seconds
+
         self.LOOKAHEAD_WPS = 200
         # Start the loop
         self.loop()
@@ -83,7 +86,7 @@ class WaypointUpdater(object):
                 self.getNextWaypoints(self.LOOKAHEAD_WPS)
                 self.publish()
 
-            rospy.logwarn("Restricted Velocity is %.2f", self.restricted_speed_in_mps)
+            #rospy.logwarn("Restricted Velocity is %.2f", self.restricted_speed_in_mps)
             rate.sleep()
 
 
@@ -186,7 +189,8 @@ class WaypointUpdater(object):
         # calculate cross track error (cte) for throttle/braking
         tl_dist = self.dist2TL()
 
-        rospy.logwarn("Distance from Traffic Light is : {}".format(tl_dist))
+        #rospy.logwarn("Distance from Traffic Light is : {}".format(tl_dist))
+
 
         # if green light and is less than 16 meters away - reset and GO!
         if tl_dist is not None and tl_dist < 0. and tl_dist > -16.:
@@ -373,11 +377,11 @@ class WaypointUpdater(object):
             #Red or Yellow lights have positive waypoints
             if self.tlWaypoints > 0:
                 dist = self.distance(self.waypoints, self.currentWaypoints, self.currentWaypoints + self.tlWaypoints)
-                rospy.logwarn("Traffic light is current Red")
+                #rospy.logwarn("Traffic light is current Red")
             #Green lights have negative waypoints
             elif self.tlWaypoints < -1:
                 dist = -self.distance(self.waypoints, self.currentWaypoints, self.currentWaypoints -self.tlWaypoints)
-                rospy.logwarn("Traffic light is current Green")
+                #rospy.logwarn("Traffic light is current Green")
         return dist
 
     def traffic_cb(self, msg):
